@@ -55,6 +55,14 @@ npm test                    # node --test（count 精度对照官方 Rust tokeni
 
 前置：构建产物 `lib/client.js`（改过源码就重跑 `npm run bundle`），Node ≥22、pnpm。
 
+已发布到 npm 后（推荐）：
+
+```bash
+dsh plugin --profile web add dsh-composer-tokens
+```
+
+本地开发安装（link 依赖；提示“无 dsh.bundle”属正常）：
+
 ```bash
 # 1) 把包装进 profile（本地目录以 link 依赖安装；提示“无 dsh.bundle”属正常）
 dsh plugin --profile web add D:\dsh-composer-tokens

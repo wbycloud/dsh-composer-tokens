@@ -5,7 +5,15 @@
   "type": "module",
   "author": "wanboy",
   "license": "MIT",
-  "private": true,
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "tokenizer",
+    "tokens",
+    "token-count",
+    "composer"
+  ],
   "engines": {
     "node": ">=22"
   },

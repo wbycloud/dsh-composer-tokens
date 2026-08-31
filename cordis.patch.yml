@@ -1,0 +1,6 @@
+# dsh-composer-tokens — loader patch layer (shipped with the package).
+# Insert the plugin entry into the web profile's Loader; the browser half is
+# discovered through the package.json `dsh.client` declaration + exports["./client"].
+- insert:
+    - id: composer-tokens
+      name: dsh-composer-tokens

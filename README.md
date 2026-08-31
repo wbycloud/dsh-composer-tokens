@@ -55,18 +55,25 @@ npm test                    # node --test（count 精度对照官方 Rust tokeni
 
 前置：构建产物 `lib/client.js`（改过源码就重跑 `npm run bundle`），Node ≥22、pnpm。
 
+**v0.1 起插件自带 `dsh.bundle.patch`（`cordis.patch.yml`），安装后无需再手动加 loader 行。**
+
 已发布到 npm 后（推荐）：
 
 ```bash
 dsh plugin --profile web add dsh-composer-tokens
 ```
 
-本地开发安装（link 依赖；提示“无 dsh.bundle”属正常）：
+直接从 GitHub 装（npm 发布前可用）：
 
 ```bash
-# 1) 把包装进 profile（本地目录以 link 依赖安装；提示“无 dsh.bundle”属正常）
+dsh plugin --profile web add github:wbycloud/dsh-composer-tokens
+```
+
+本地开发安装（link 依赖）：
+
+```bash
+# 1) 把包装进 profile（本地目录以 link 依赖安装；插件自带 patch，无需手动加行）
 dsh plugin --profile web add D:\dsh-composer-tokens
-#    等价于在 profile 目录执行: pnpm add D:\dsh-composer-tokens
 ```
 
 ```powershell
@@ -78,18 +85,12 @@ Remove-Item C:\Users\wbycl\.dsh\profiles\web\node_modules\dsh-composer-tokens
 cmd /c mklink /J C:\Users\wbycl\.dsh\profiles\web\node_modules\dsh-composer-tokens D:\dsh-composer-tokens
 ```
 
-```yaml
-# 3) 在 profile 的 cordis.patch.yml 追加 loader 行（官方 client 插件同款格式）：
-#    - insert:
-#        - id: composer-tokens
-#          name: 'dsh-composer-tokens'
-#    （本机已加好；重启后持久生效）
+```bash
+# 3) 重启 GUI（dsh web）使 patch 生效；不想重启时可用动态 Cordis 工具 loader.create(...) 热补
+# 4) 浏览器刷新 http://127.0.0.1:3080 → 输入框行内右侧出现徽标
 ```
 
-```bash
-# 4) 重启 GUI（dsh web）使 patch 生效；不想重启时可用动态 Cordis 工具 loader.create(...) 热补
-# 5) 浏览器刷新 http://127.0.0.1:3080 → 输入框行内右侧出现徽标
-```
+> **老安装迁移**：v0.1 之前手动加过 loader 行的 profile（`cordis.patch.yml` 里的 `composer-tokens` 行）请删掉那一行——插件自带 patch 后重启会重复 insert 同一 id 而冲突。
 
 > 本机当前状态：**已装好并持续生效**（patch 行 + junction 已修复；本会话用 loader.create 热补过，重启后由 patch 自动加载）。
 
@@ -111,7 +112,7 @@ localStorage.setItem("dsh-composer-tokens.overrides", JSON.stringify({
 
 ```bash
 dsh plugin --profile web remove dsh-composer-tokens
-# 并删除 cordis.patch.yml 中的 composer-tokens 行；刷新页面后徽标随 fiber dispose 移除
+# v0.1 起 patch 随包（dsh.bundle），remove 即整体移除；仅老安装（手动加过 loader 行）需手工清掉那行
 ```
 
 ## 开发热更
@@ -125,4 +126,4 @@ checkout 的 `pnpm run dev:web` 激活 client-plugin HMR —— 改 bundle 源 �
 - 不含输出 tokens（输出不可预测；`tokenUsage` 明细中可见输出桶）。
 - seam 常数：全家族 3（v1.1 校准闭环）。
 - 行内空间有限时徽标可能以省略号截断（"…" 尾部）；完整数值在 Tooltip 中可见。
-- 装机即装即用：`pnpm add` + `cordis.patch.yml` 行；本机 pnpm link 符号链接需按 docs/m0-spike.md「装机与热更实证」重建为 junction（跨盘文件链接损坏问题）。
+- 装机即装即用：`dsh plugin add` 一键（patch 随包自带）；本机 pnpm link 符号链接需按 docs/m0-spike.md「装机与热更实证」重建为 junction（跨盘文件链接损坏问题）。

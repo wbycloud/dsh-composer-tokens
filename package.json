@@ -5,6 +5,14 @@
   "type": "module",
   "author": "wanboy",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wbycloud/dsh-composer-tokens.git"
+  },
+  "homepage": "https://github.com/wbycloud/dsh-composer-tokens",
+  "bugs": {
+    "url": "https://github.com/wbycloud/dsh-composer-tokens/issues"
+  },
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -19,6 +27,9 @@
   },
   "main": "./host/index.js",
   "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "inject": [
@@ -37,7 +48,8 @@
   },
   "files": [
     "lib",
-    "host"
+    "host",
+    "cordis.patch.yml"
   ],
   "scripts": {
     "prepare-tokenizer": "node scripts/prepare-tokenizer.mjs",

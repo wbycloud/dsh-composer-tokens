@@ -29,6 +29,7 @@ Thumbs.db
 # Environment
 .env
 .env.*
+.npmrc
 
 # TypeScript
 *.tsbuildinfo

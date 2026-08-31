@@ -92,11 +92,16 @@ cmd /c mklink /J C:\Users\wbycl\.dsh\profiles\web\node_modules\dsh-composer-toke
 
 > **老安装迁移**：v0.1 之前手动加过 loader 行的 profile（`cordis.patch.yml` 里的 `composer-tokens` 行）请删掉那一行——插件自带 patch 后重启会重复 insert 同一 id 而冲突。
 
-> 本机当前状态：**已装好并持续生效**（patch 行 + junction 已修复；本会话用 loader.create 热补过，重启后由 patch 自动加载）。
+> 本机当前状态（2026-08-31 定案）：**单源 = `dsh.profile.bundles`**。`dsh-composer-tokens` 已在 profile bundles 层（junction 指向本工作区），启动时由包自带的 `dsh.bundle.patch`（`cordis.patch.yml`）自动挂载 loader 条目；`profiles\web\cordis.patch.yml` 用户层**不再**含该行。因此：
+> - 之后跑 `dsh plugin add/update dsh-composer-tokens` **安全且幂等**（reconcile 只会把它保持在 bundles，不再有重复 insert 冲突）；
+> - 用户层 patch 文件被其它插件工具重写也不再影响徽标（来源是 bundles，不是那两行）；
+> - 代价：bundles 是启动时组装的——改 bundles 后需重启 GUI 生效（本机现状即已重启后的稳定态）。
+> - 诊断史（防再踩）：8-31 曾发现运行中 404——源头上是 8-29 用户层 patch 行被重写丢失 + 包当时无 `dsh.bundle` 声明（reconcile 跳过）；`watchUserPatches` 对 profile `cordis.patch.yml` 的热重载当前版本可用（改该文件秒级热生效，曾用于临时救回徽标）。
 
 ## 使用
 
 - 位置：输入框行内最右侧、发送按钮左边。`≈`=真实锚点口径（基线已含系统/工具）；`~`=估算（新会话占位 / 未知模型 / 离线 / 加载中）。
+- 颜色按**本次请求总 token 数**（基线+草稿+帧）分级：<100k 绿、100k–300k 琥珀、>300k 红（背景与边框同步着色；占用率仅保留在 Tooltip 中，不再驱动颜色）。
 - 悬停（或键盘焦点）展开 Tooltip：预计总 tokens、基线及来源、固定开销（系统+工具）、草稿增量、消息帧、占用率、会话累计真实 usage、模型与引擎精度、技能/引用口径。
 - 新会话首次请求前显示 `~上次会话规模` 占位；发送一条消息后自动校准并更新缓存。
 - 模型覆写（可选）：

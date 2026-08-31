@@ -1,6 +1,6 @@
 {
   "name": "dsh-composer-tokens",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DSH web GUI composer real-time token counter (client plugin, v1)",
   "type": "module",
   "author": "wanboy",

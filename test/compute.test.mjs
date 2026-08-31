@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { computeBadge, resolveBaseline, seamOf, occupancyLevel, SEAM_TABLE, sumUsage, fixedOverhead } from "../lib-test/index.mjs";
+import { computeBadge, resolveBaseline, seamOf, costLevel, costStyles, COST_THRESHOLDS, SEAM_TABLE, sumUsage, fixedOverhead } from "../lib-test/index.mjs";
 
 test("seam table: deepseek family = 3, unknown families default 3", () => {
   assert.equal(SEAM_TABLE["deepseek"], 3);
@@ -81,14 +81,36 @@ test("computeBadge: occupancy clamp at 100 and rounding", () => {
   assert.equal(computeBadge({ projectedTokens: 500 }, 10, "deepseek").occupancy, null);
 });
 
-test("occupancyLevel thresholds (80 warn / 95 danger)", () => {
-  assert.equal(occupancyLevel(null), "normal");
-  assert.equal(occupancyLevel(0), "normal");
-  assert.equal(occupancyLevel(79), "normal");
-  assert.equal(occupancyLevel(80), "warn");
-  assert.equal(occupancyLevel(94), "warn");
-  assert.equal(occupancyLevel(95), "danger");
-  assert.equal(occupancyLevel(100), "danger");
+test("COST_THRESHOLDS: medium = 100k, high = 300k", () => {
+  assert.equal(COST_THRESHOLDS.medium, 100_000);
+  assert.equal(COST_THRESHOLDS.high, 300_000);
+});
+
+test("costLevel thresholds by absolute tokens (100k medium / 300k high)", () => {
+  assert.equal(costLevel(0), "low");
+  assert.equal(costLevel(99_999), "low");
+  assert.equal(costLevel(100_000), "medium");
+  assert.equal(costLevel(299_999), "medium");
+  assert.equal(costLevel(300_000), "high");
+  assert.equal(costLevel(1_000_000), "high");
+});
+
+test("costStyles: every level yields distinct non-empty colors", () => {
+  const low = costStyles("low");
+  const medium = costStyles("medium");
+  const high = costStyles("high");
+  for (const s of [low, medium, high]) {
+    assert.ok(s.color.length > 0);
+    assert.ok(s.background.length > 0);
+    assert.ok(s.borderColor.length > 0);
+  }
+  // green → amber → red palettes, all distinct
+  assert.notEqual(medium.color, low.color);
+  assert.notEqual(high.color, low.color);
+  assert.notEqual(high.color, medium.color);
+  assert.match(high.color, /error/);
+  assert.match(medium.color, /warn/);
+  assert.match(low.color, /success/);
 });
 
 test("sumUsage: four buckets total", () => {

@@ -3,7 +3,7 @@ import type { TokenizerEngine, EngineResolution } from "./engine/types";
 import { HeuristicEngine } from "./engine/heuristic";
 import { resolveEngine } from "./engine/registry";
 import { countDraft, serializeDraft, type OccurrenceLike, MAX_COUNT_CHARS } from "./serialization";
-import { computeBadge, formatCount, occupancyLevel, sumUsage, fixedOverhead, type PressureView, type UsageView, type BreakdownView } from "./compute";
+import { computeBadge, formatCount, costLevel, costStyles, sumUsage, fixedOverhead, type PressureView, type UsageView, type BreakdownView } from "./compute";
 import { createTrailingDebouncer } from "./debounce";
 
 const DEBOUNCE_MS = 250;
@@ -198,7 +198,9 @@ export function TokenMeterBadge(props: TokenMeterBadgeProps): null | JSX.Element
     return computeBadge(pressure, draftTokens, engineRes.familyId, inputDraft.trim() === "", breakdown, lastFixed);
   }, [pressure, draftCount, engineRes.familyId, inputDraft, breakdown, lastFixed]);
 
-  const level = occupancyLevel(numbers.occupancy);
+  // Cost level by ABSOLUTE token count (user reads the badge as "how much
+  // this send costs"), not by occupancy %. Colors = green → amber → red.
+  const badge = costStyles(costLevel(numbers.total));
   // The「~」marker covers non-exact engines AND estimated baselines
   // (breakdown / last-fixed placeholders); real anchors render「≈」.
   const showLoading = loading && inputDraft.trim() !== "";
@@ -207,8 +209,6 @@ export function TokenMeterBadge(props: TokenMeterBadgeProps): null | JSX.Element
     showLoading || draftCount === null
       ? t?.("badge.loading") ?? "…"
       : `${estimate ? "~" : "≈"}${formatCount(numbers.total)}${numbers.occupancy !== null ? ` · ${numbers.occupancy}%` : ""}`;
-  const badgeColor =
-    level === "danger" ? "var(--dsw-alias-state-error-primary)" : level === "warn" ? "var(--dsw-alias-state-warn-primary)" : "var(--dsw-alias-label-tertiary)";
 
   const usageTotal = sumUsage(usage);
   const modelLabel = model ?? t?.("tooltip.unknownModel") ?? "Unknown model";
@@ -229,13 +229,13 @@ export function TokenMeterBadge(props: TokenMeterBadgeProps): null | JSX.Element
           fontSize: 11,
           lineHeight: 1.2,
           whiteSpace: "nowrap",
-          color: badgeColor,
+          color: badge.color,
           fontVariantNumeric: "tabular-nums",
           cursor: "default",
           padding: "2px 6px",
-          border: "1px solid var(--dsw-alias-border-l1)",
+          border: `1px solid ${badge.borderColor}`,
           borderRadius: 999,
-          background: "var(--dsw-specific-tip)",
+          background: badge.background,
           userSelect: "none",
           opacity: numbers.total === 0 ? 0.55 : 1,
         }}

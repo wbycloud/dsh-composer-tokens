@@ -115,12 +115,60 @@ export function computeBadge(
   return { baseline, draftTokens, seam, total, occupancy, fixedTokens, baselineSource: source };
 }
 
-/** Occupancy color threshold (design §4.5: 80% warn / 95% red). */
-export function occupancyLevel(occupancy: number | null): "normal" | "warn" | "danger" {
-  if (occupancy === null) return "normal";
-  if (occupancy >= 95) return "danger";
-  if (occupancy >= 80) return "warn";
-  return "normal";
+/**
+ * Absolute-token cost levels. The user reads the badge as「这条消息要花多少
+ * token」— so the tier is judged by the total count (baseline + draft + seam),
+ * NOT by context occupancy (design §4.5's occupancy colors superseded per
+ * user feedback; occupancy stays visible in the tooltip only).
+ */
+export type CostLevel = "low" | "medium" | "high";
+
+/** Cost tier thresholds on the badge total. */
+export const COST_THRESHOLDS = {
+  medium: 100_000,
+  high: 300_000,
+} as const;
+
+/** Map the badge total to a cost level by absolute token count. */
+export function costLevel(total: number): CostLevel {
+  if (total >= COST_THRESHOLDS.high) return "high";
+  if (total >= COST_THRESHOLDS.medium) return "medium";
+  return "low";
+}
+
+export interface CostColors {
+  color: string;
+  background: string;
+  borderColor: string;
+}
+
+/**
+ * Badge colors per cost level, derived from DSH design tokens. color-mix
+ * keeps the tinted backgrounds/borders theme-consistent without knowing the
+ * tokens' concrete RGB values (modern Chromium/Firefox/Safari only — the DSH
+ * web GUI ships a current engine).
+ */
+export function costStyles(level: CostLevel): CostColors {
+  switch (level) {
+    case "medium":
+      return {
+        color: "var(--dsw-alias-state-warn-primary)",
+        background: "color-mix(in srgb, var(--dsw-alias-state-warn-primary) 8%, transparent)",
+        borderColor: "color-mix(in srgb, var(--dsw-alias-state-warn-primary) 35%, var(--dsw-alias-border-l1))",
+      };
+    case "high":
+      return {
+        color: "var(--dsw-alias-state-error-primary)",
+        background: "color-mix(in srgb, var(--dsw-alias-state-error-primary) 10%, transparent)",
+        borderColor: "color-mix(in srgb, var(--dsw-alias-state-error-primary) 50%, var(--dsw-alias-border-l1))",
+      };
+    default:
+      return {
+        color: "var(--dsw-alias-state-success-primary)",
+        background: "transparent",
+        borderColor: "var(--dsw-alias-border-l1)",
+      };
+  }
 }
 
 /** 12345 → "12,345" */

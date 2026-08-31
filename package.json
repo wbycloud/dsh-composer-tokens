@@ -1,0 +1,50 @@
+{
+  "name": "dsh-composer-tokens",
+  "version": "0.1.0",
+  "description": "DSH web GUI composer real-time token counter (client plugin, v1)",
+  "type": "module",
+  "author": "wanboy",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./host/index.js",
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "slots",
+        "sessions",
+        "locale"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./host/index.js",
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "host"
+  ],
+  "scripts": {
+    "prepare-tokenizer": "node scripts/prepare-tokenizer.mjs",
+    "bundle": "tsdown",
+    "bundle:test": "tsdown --config tsdown.config.test.ts",
+    "watch": "tsdown --watch",
+    "test": "npm run bundle:test && node --test --experimental-test-isolation=none \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "@huggingface/tokenizers": "0.1.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "react": "^18.3.1",
+    "tsdown": "^0.22.14",
+    "typescript": "^7.0.2"
+  }
+}

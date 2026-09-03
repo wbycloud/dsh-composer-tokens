@@ -97,13 +97,19 @@ function useSessionModel(props: TokenMeterBadgeProps): [string | undefined, () =
   return [model, refresh];
 }
 
+/**
+ * Boundary component: the slot may temporarily have no session/input while
+ * switching between hero, blank, and active conversation states. Keep the
+ * conditional outside the Hooks-owning component so its Hook sequence never
+ * changes across renders.
+ */
 export function TokenMeterBadge(props: TokenMeterBadgeProps): null | JSX.Element {
-  const { sessionId, input, t, useProjection, api, controller } = props;
+  if (props.sessionId === undefined || props.input === undefined) return null;
+  return <TokenMeterBadgeActive {...props} />;
+}
 
-  // The renderer only mounts this slot when a session + input exist
-  // (hero/blank zone === undefined, dsh-client-ui-conversation L7191–7242);
-  // the guard is defensive only.
-  if (sessionId === undefined || input === undefined) return null;
+function TokenMeterBadgeActive(props: TokenMeterBadgeProps): JSX.Element {
+  const { sessionId, input, t, useProjection, api, controller } = props;
 
   const pressure = (useProjection?.("contextPressure") ?? undefined) as PressureView | undefined;
   const usage = (useProjection?.("tokenUsage") ?? undefined) as UsageView | undefined;
@@ -265,54 +271,39 @@ export function TokenMeterBadge(props: TokenMeterBadgeProps): null | JSX.Element
             whiteSpace: "pre-line",
           }}
         >
-          <span style={{ display: "block", fontWeight: 600, marginBottom: 4 }}>{t?.("tooltip.title")}</span>
-          <span style={{ display: "block" }}>
-            {t?.("tooltip.total")}: <b>{formatCount(numbers.total)}</b>{" "}
-            {estimate ? t?.("badge.tooltip.estimated") : t?.("badge.tooltip.exact")}
+          <span style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>{t?.("tooltip.title") ?? "预计请求"}</span>
+          <span style={{ display: "block", fontSize: 16, fontWeight: 700, lineHeight: 1.25, color: badge.color }}>
+            {estimate ? "~" : "≈"}{formatCount(numbers.total)} <small style={{ fontSize: 11, fontWeight: 500 }}>tokens</small>
           </span>
-          <span style={{ display: "block" }}>
-            {t?.("tooltip.baseline")}: {formatCount(numbers.baseline)}{" "}
-            <i style={{ opacity: 0.65 }}>
-              {numbers.baselineSource === "anchor"
-                ? t?.("tooltip.baselineAnchor")
-                : numbers.baselineSource === "breakdown"
-                  ? t?.("tooltip.baselineBreakdown")
-                  : numbers.baselineSource === "last-fixed"
-                    ? t?.("tooltip.baselineLastFixed")
-                    : t?.("tooltip.baselineNone")}
-            </i>
-            {engineRes.status === "heuristic" ? ` (${t?.("badge.estimate")})` : ""}
+          <span style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "2px 14px", marginTop: 8, paddingTop: 7, borderTop: "1px solid var(--dsw-alias-border-l1)" }}>
+            <span>{t?.("tooltip.historyShort") ?? "历史"}</span>
+            <b>{formatCount(numbers.baseline)}</b>
+            <span>{t?.("tooltip.draftShort") ?? "草稿"}</span>
+            <b>+{formatCount(numbers.draftTokens)}</b>
+            <span>{t?.("tooltip.frameShort") ?? "帧"}</span>
+            <b>+{formatCount(numbers.seam)}</b>
           </span>
-          <span style={{ display: "block" }}>
-            {t?.("tooltip.fixed")}: {formatCount(numbers.fixedTokens)}{" "}
-            <i style={{ opacity: 0.65 }}>({t?.("tooltip.fixedNote")})</i>
+          <span style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "2px 14px", marginTop: 7, paddingTop: 7, borderTop: "1px solid var(--dsw-alias-border-l1)" }}>
+            <span>{t?.("tooltip.levelShort") ?? "级别"}</span>
+            <b style={{ color: badge.color }}>{t?.(`tooltip.level.${costLevel(numbers.total)}`) ?? costLevel(numbers.total)}</b>
+            {numbers.occupancy !== null && <>
+              <span>{t?.("tooltip.windowShort") ?? "窗口"}</span>
+              <b>{numbers.occupancy}%</b>
+            </>}
+            <span>{t?.("tooltip.modelShort") ?? "模型"}</span>
+            <span style={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }} title={modelLabel}>{modelLabel}</span>
           </span>
-          <span style={{ display: "block" }}>
-            {t?.("tooltip.draft")}: +{formatCount(numbers.draftTokens)}
-            {!estimate && numbers.draftTokens > 0 ? ` ${t?.("tooltip.refPending") ?? ""}` : ""}
+          <span style={{ display: "block", marginTop: 7, opacity: 0.72, fontSize: 11 }}>
+            {t?.("tooltip.methodShort") ?? "口径"}: {estimate ? t?.("badge.tooltip.estimated") : t?.("badge.tooltip.exact")} · {engineLabel}
           </span>
-          <span style={{ display: "block" }}>
-            {t?.("tooltip.seam")}: +{formatCount(numbers.seam)}
-          </span>
-          <span style={{ display: "block", opacity: 0.8 }}>
-            {t?.("tooltip.skill")}
-          </span>
-          {numbers.occupancy !== null && (
-            <span style={{ display: "block" }}>
-              {t?.("tooltip.occupancy")}: {numbers.occupancy}% / {formatCount(pressure?.contextWindow ?? 0)}
-            </span>
-          )}
-          <span style={{ display: "block", marginTop: 4, borderTop: "1px solid var(--dsw-alias-border-l1)", paddingTop: 4 }}>
-            {t?.("tooltip.usage")}: {formatCount(usageTotal)}
-          </span>
-          <span style={{ display: "block" }}>
-            {t?.("tooltip.model")}: {modelLabel} <i style={{ opacity: 0.65 }}>({engineLabel})</i>
+          <span style={{ display: "block", marginTop: 2, opacity: 0.72, fontSize: 11 }}>
+            {t?.("tooltip.usageShort") ?? "累计"}: {formatCount(usageTotal)}
           </span>
           {numbers.baselineSource === "none" && (
-            <span style={{ display: "block", color: "var(--dsw-alias-state-warn-primary)" }}>{t?.("tooltip.calibrate")}</span>
+            <span style={{ display: "block", marginTop: 5, color: "var(--dsw-alias-state-warn-primary)", fontSize: 11 }}>{t?.("tooltip.calibrate")}</span>
           )}
           {draftCount?.truncated === true && (
-            <span style={{ display: "block", color: "var(--dsw-alias-state-warn-primary)" }}>{t?.("tooltip.truncated")}</span>
+            <span style={{ display: "block", marginTop: 5, color: "var(--dsw-alias-state-warn-primary)", fontSize: 11 }}>{t?.("tooltip.truncated")}</span>
           )}
         </span>
       )}

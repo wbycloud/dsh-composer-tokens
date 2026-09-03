@@ -233,6 +233,7 @@ function TokenMeterBadgeActive(props: TokenMeterBadgeProps): JSX.Element {
         onBlur={() => setHover(false)}
         style={{
           fontSize: 11,
+          fontWeight: 600,
           lineHeight: 1.2,
           whiteSpace: "nowrap",
           color: badge.color,

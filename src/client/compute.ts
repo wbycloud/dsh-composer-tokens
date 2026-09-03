@@ -152,21 +152,21 @@ export function costStyles(level: CostLevel): CostColors {
   switch (level) {
     case "medium":
       return {
-        color: "var(--dsw-alias-state-warn-primary)",
-        background: "color-mix(in srgb, var(--dsw-alias-state-warn-primary) 8%, transparent)",
-        borderColor: "color-mix(in srgb, var(--dsw-alias-state-warn-primary) 35%, var(--dsw-alias-border-l1))",
+        color: "var(--dsw-alias-state-warn-primary, var(--dsw-static-amber-600, #b45309))",
+        background: "color-mix(in srgb, var(--dsw-alias-state-warn-primary, var(--dsw-static-amber-500, #f59e0b)) 8%, transparent)",
+        borderColor: "color-mix(in srgb, var(--dsw-alias-state-warn-primary, var(--dsw-static-amber-500, #f59e0b)) 35%, var(--dsw-alias-border-l1, #d1d5db))",
       };
     case "high":
       return {
-        color: "var(--dsw-alias-state-error-primary)",
-        background: "color-mix(in srgb, var(--dsw-alias-state-error-primary) 10%, transparent)",
-        borderColor: "color-mix(in srgb, var(--dsw-alias-state-error-primary) 50%, var(--dsw-alias-border-l1))",
+        color: "var(--dsw-alias-state-error-primary, #dc2626)",
+        background: "color-mix(in srgb, var(--dsw-alias-state-error-primary, #dc2626) 10%, transparent)",
+        borderColor: "color-mix(in srgb, var(--dsw-alias-state-error-primary, #dc2626) 50%, var(--dsw-alias-border-l1, #d1d5db))",
       };
     default:
       return {
-        color: "var(--dsw-alias-state-success-primary)",
+        color: "var(--dsw-alias-state-success-primary, #16a34a)",
         background: "transparent",
-        borderColor: "var(--dsw-alias-border-l1)",
+        borderColor: "var(--dsw-alias-border-l1, #d1d5db)",
       };
   }
 }

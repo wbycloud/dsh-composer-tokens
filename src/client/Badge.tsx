@@ -3,7 +3,7 @@ import type { TokenizerEngine, EngineResolution } from "./engine/types";
 import { HeuristicEngine } from "./engine/heuristic";
 import { resolveEngine } from "./engine/registry";
 import { countDraft, serializeDraft, type OccurrenceLike, MAX_COUNT_CHARS } from "./serialization";
-import { computeBadge, formatCount, costLevel, costStyles, sumUsage, fixedOverhead, type PressureView, type UsageView, type BreakdownView } from "./compute";
+import { computeBadge, formatCount, costLevel, costStyles, sumUsage, cacheStats, fixedOverhead, type PressureView, type UsageView, type BreakdownView } from "./compute";
 import { createTrailingDebouncer } from "./debounce";
 
 const DEBOUNCE_MS = 250;
@@ -223,6 +223,8 @@ function TokenMeterBadgeActive(props: TokenMeterBadgeProps): JSX.Element {
       : `${estimate ? "~" : "≈"}${formatCount(numbers.total)}${numbers.occupancy !== null ? ` · ${numbers.occupancy}%` : ""}`;
 
   const usageTotal = sumUsage(usage);
+  const cache = cacheStats(usage);
+  const cacheLabel = cache.available ? `${cache.hitPercent}%` : t?.("tooltip.cacheUnavailable") ?? "暂无数据";
   const modelLabel = model ?? t?.("tooltip.unknownModel") ?? "Unknown model";
   const engineLabel = engineRes.status === "ready" && engineRes.engine !== undefined ? engineRes.engine.label : t?.("tooltip.estimated") ?? "Estimated";
 
@@ -309,7 +311,15 @@ function TokenMeterBadgeActive(props: TokenMeterBadgeProps): JSX.Element {
           <span style={{ display: "block", marginTop: 2, opacity: 0.72, fontSize: 11 }}>
             {t?.("tooltip.usageShort") ?? "累计"}: {formatCount(usageTotal)}
           </span>
-          {numbers.baselineSource === "none" && (
+          <span style={{ display: "block", marginTop: 2, opacity: 0.72, fontSize: 11 }}>
+             {t?.("tooltip.cacheShort") ?? "缓存命中"}: {cacheLabel}
+           </span>
+           {cache.available && (
+             <span style={{ display: "block", marginTop: 1, opacity: 0.58, fontSize: 10 }}>
+               {t?.("tooltip.cacheDetail") ?? "读"} {formatCount(cache.cacheReadTokens)} · {t?.("tooltip.uncachedDetail") ?? "未缓存"} {formatCount(cache.uncachedInputTokens)} · {t?.("tooltip.cacheWriteDetail") ?? "写"} {formatCount(cache.cacheWriteTokens)}
+             </span>
+           )}
+           {numbers.baselineSource === "none" && (
             <span style={{ display: "block", marginTop: 5, color: "var(--dsw-alias-state-warn-primary)", fontSize: 11 }}>{t?.("tooltip.calibrate")}</span>
           )}
           {draftCount?.truncated === true && (

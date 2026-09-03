@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { computeBadge, resolveBaseline, seamOf, costLevel, costStyles, COST_THRESHOLDS, SEAM_TABLE, sumUsage, fixedOverhead } from "../lib-test/index.mjs";
+import { computeBadge, resolveBaseline, seamOf, costLevel, costStyles, COST_THRESHOLDS, SEAM_TABLE, sumUsage, cacheStats, fixedOverhead } from "../lib-test/index.mjs";
 
 test("seam table: deepseek family = 3, unknown families default 3", () => {
   assert.equal(SEAM_TABLE["deepseek"], 3);
@@ -120,4 +120,18 @@ test("sumUsage: four buckets total", () => {
     155
   );
   assert.equal(sumUsage({}), 0);
+});
+
+test("cacheStats: hit rate uses only input buckets", () => {
+  const r = cacheStats({ uncachedInputTokens: 100, cacheReadTokens: 300, cacheWriteTokens: 100, outputTokens: 10000 });
+  assert.equal(r.inputTokens, 500);
+  assert.equal(r.hitPercent, 60);
+  assert.equal(r.available, true);
+});
+
+test("cacheStats: zero input is unavailable, not 0%", () => {
+  assert.equal(cacheStats(undefined).available, false);
+  assert.equal(cacheStats({ outputTokens: 100 }).available, false);
+  assert.equal(cacheStats({ uncachedInputTokens: 100 }).hitPercent, 0);
+  assert.equal(cacheStats({ cacheReadTokens: 100 }).hitPercent, 100);
 });

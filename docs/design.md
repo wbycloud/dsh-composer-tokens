@@ -217,7 +217,7 @@ occupancy   = capacity ? min(100, round(total / capacity * 100)) : null
 ```
 
 - 行内徽标：`≈12,345`；占用率超 80% 警示色、超 95% 红色；非精确引擎前缀 `~`。
-- Tooltip 详情：基线 N · 草稿 +N · 会话累计真实 usage（tokenUsage 四桶合计）· 模型名 · 口径（精确/估算）。
+- Tooltip 详情：基线 N · 草稿 +N · 会话累计真实 usage（tokenUsage 四桶合计）· 累计输入缓存命中率 · 模型名 · 口径（精确/估算）。缓存命中率 = `cacheReadTokens / (uncachedInputTokens + cacheReadTokens + cacheWriteTokens)`；输出 tokens 不参与分母。无输入 usage 时显示暂无数据。
 - 空草稿：显示 baseline；新会话无 usage：baseline = 0，只显示草稿。
 - 发送后：draft 清空，徽标回到 baseline；下一轮 `session/projection` 帧自动刷新 projectedTokens——自校准闭环天然成立，无需额外代码。
 - 模型切换：engine 按新 modelId 懒加载替换；旧锚点属官方已知限制，Tooltip 注明「基于最近一次请求」。

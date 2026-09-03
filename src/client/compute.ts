@@ -186,3 +186,36 @@ export function sumUsage(usage: UsageView | undefined): number {
     (usage.cacheWriteTokens ?? 0)
   );
 }
+
+export interface CacheStats {
+  uncachedInputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  inputTokens: number;
+  hitRate: number;
+  hitPercent: number;
+  available: boolean;
+}
+
+function nonNegativeFinite(value: number | undefined): number {
+  return value !== undefined && Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+/** Session-cumulative input cache statistics; output tokens are excluded. */
+export function cacheStats(usage: UsageView | undefined): CacheStats {
+  const uncachedInputTokens = nonNegativeFinite(usage?.uncachedInputTokens);
+  const cacheReadTokens = nonNegativeFinite(usage?.cacheReadTokens);
+  const cacheWriteTokens = nonNegativeFinite(usage?.cacheWriteTokens);
+  const inputTokens = uncachedInputTokens + cacheReadTokens + cacheWriteTokens;
+  const available = inputTokens > 0;
+  const hitRate = available ? cacheReadTokens / inputTokens : 0;
+  return {
+    uncachedInputTokens,
+    cacheReadTokens,
+    cacheWriteTokens,
+    inputTokens,
+    hitRate,
+    hitPercent: Math.round(hitRate * 100),
+    available,
+  };
+}

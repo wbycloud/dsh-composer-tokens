@@ -75,19 +75,25 @@ function useSessionModel(props: TokenMeterBadgeProps): [string | undefined, () =
   const { api, sessionId } = props;
   const [model, setModel] = useState<string | undefined>(undefined);
   const lastQuery = useRef(0);
-  // Reset the cooldown when the session changes so a fresh session is never
-  // stuck with a stale (possibly undefined) model for up to 3s.
+  const requestId = useRef(0);
+  // Reset the cooldown and discard the previous session's model immediately.
+  // The request id prevents a late RPC response from an old session from
+  // overwriting the current session's model identity.
   useEffect(() => {
     lastQuery.current = 0;
+    requestId.current += 1;
+    setModel(undefined);
   }, [sessionId]);
   const refresh = useCallback(() => {
     if (api?.sessions?.models === undefined || sessionId === undefined) return;
     const now = Date.now();
     if (now - lastQuery.current < MODEL_REQUERY_COOLDOWN_MS) return;
     lastQuery.current = now;
+    const currentRequestId = ++requestId.current;
     api.sessions
       .models({ sessionId })
       .then(({ result }) => {
+        if (currentRequestId !== requestId.current) return;
         if (result?.ok === true) setModel(result.value?.current?.model);
       })
       .catch(() => {
